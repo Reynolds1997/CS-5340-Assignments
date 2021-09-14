@@ -118,49 +118,58 @@ def main():
 
 def morphologicalAnalyzer(wordParam, rulesListParam, resultListParam, dictList,originID):
     resultFound = False
+
     for rule in rulesListParam:
         placeholderWord = wordParam
+        placeholderPOS = ""
         ruleID = ""
-        if(rule.keyword == "SUFFIX"):
-            #print(wordParam)
-            if(wordParam.lower().endswith(rule.chars)):
-              #  print("LOOKING FOR SUFFIX: " + rule.chars)
-                
-                placeholderWord = wordParam.removesuffix(rule.chars)
-                if(rule.replacementChars != "-"):
-                    placeholderWord = placeholderWord + rule.replacementChars 
-                #else:
-                 #   placeholderWord = placeholderWord + rule.replacementChars 
 
-                if(originID == ""):
-                    ruleID = rule.id
-                else:
-                    ruleID = originID + "," + ruleID
-                    #resultListParam.append(ResultWord(wordParam,rule.posNew,placeholderWord,"morphology",rule.id))
-                
-                resultListParam.append(ResultWord(wordParam,rule.posNew,placeholderWord,"morphology",ruleID))
-
-                morphologicalAnalyzer(placeholderWord,rulesListParam,resultListParam,dictList,ruleID)
-                resultFound = True
-        elif(wordParam.lower().startswith(rule.chars)):
-              #print("LOOKING FOR PREFIX: " + rule.chars)
+        wordCapFound = False
+        if(rule.keyword == "SUFFIX" and wordParam.lower().endswith(rule.chars.lower())):
+            placeholderWord = wordParam.removesuffix(rule.chars)
+            if(rule.replacementChars != "-"):
+                placeholderWord = placeholderWord + rule.replacementChars 
+            placeholderPOS = rule.posNew
+            wordCapFound = True
+        elif(rule.keyword == "PREFIX" and wordParam.lower().startswith(rule.chars.lower())):
             placeholderWord = wordParam.removeprefix(rule.chars)
             if(rule.replacementChars != "-"):
                 placeholderWord = rule.replacementChars + placeholderWord
-            #print(placeholderWord)
+            placeholderPOS = rule.posNew
+            wordCapFound = True
 
-            if(originID == ""):
-                ruleID = rule.id
-            else:
-                ruleID = originID + "," + rule.id
+        if(wordCapFound):
+            wordMatchFound = False
+            for word in dictList:
+                print("Original word: " + wordParam)
+                print(placeholderWord + " vs " + word.word)
+                print(placeholderPOS + " vs " + word.pos)
+                if(word.word.lower() == placeholderWord.lower() and word.pos == placeholderPOS):
+                    resultFound = True
+                    if(originID != ""):
+                        ruleID = originID+","+rule.id
+                    else:
+                        ruleID = rule.id
+                    resultListParam.append(ResultWord(wordParam,rule.posNew,placeholderWord,"morphology",ruleID))
+                    wordMatchFound = True
+                    break
+            if (wordMatchFound == False):
+                #print(wordParam + " becomes " + placeholderWord)
+                #print(placeholderWord + " vs " + word.word)
+                #print(placeholderPOS + " vs " + word.pos)
+                resultFound = morphologicalAnalyzer(placeholderWord.lower(),rulesListParam,resultListParam,dictList,rule.id)    
 
-            resultListParam.append(ResultWord(wordParam,rule.posNew,placeholderWord,"morphology",ruleID))
-            resultFound = True
-            morphologicalAnalyzer(placeholderWord,rulesListParam,resultListParam,dictList,ruleID)
-        else:
-            resultFound = False
-        
     return resultFound
+
+   
+
+
+
+
+
+
+
+    
 
         
 

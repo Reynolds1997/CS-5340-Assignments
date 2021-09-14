@@ -97,7 +97,7 @@ def main():
 
         #Perform morphological analysis if the word isn't in the dictionary
         if not foundInDictionary:
-            morphResultFound = morphologicalAnalyzer(word, rulesList, resultWords, dictList)
+            morphResultFound = morphologicalAnalyzer(word, rulesList, resultWords, dictList,"")
 
         #If it's not in the dictionary and no morphological analysis result was found, output the default.
         if not foundInDictionary and not morphResultFound:
@@ -105,16 +105,22 @@ def main():
 
                     
     
-
+    prevWord = ""
     for word in resultWords:
+        currentWord = word.word
+        #print("CURRENT WORD: " + currentWord)
+        #print("PREV WORD: " + prevWord)
+        if currentWord != prevWord and prevWord != "": 
+            print("")
         print("WORD=" +word.word + " " + "POS=" + word.pos + " " + "ROOT=" + word.root + " " + "SOURCE=" + word.source + " " + "PATH=" + word.path)
+        prevWord = currentWord
 
 
-
-def morphologicalAnalyzer(wordParam, rulesListParam, resultListParam, dictList):
+def morphologicalAnalyzer(wordParam, rulesListParam, resultListParam, dictList,originID):
     resultFound = False
     for rule in rulesListParam:
         placeholderWord = wordParam
+        ruleID = ""
         if(rule.keyword == "SUFFIX"):
             #print(wordParam)
             if(wordParam.lower().endswith(rule.chars)):
@@ -125,8 +131,16 @@ def morphologicalAnalyzer(wordParam, rulesListParam, resultListParam, dictList):
                     placeholderWord = placeholderWord + rule.replacementChars 
                 #else:
                  #   placeholderWord = placeholderWord + rule.replacementChars 
-                resultListParam.append(ResultWord(wordParam,rule.posNew,placeholderWord,"morphology",rule.id))
-             #       morphologicalAnalyzer(placeholderWord,rulesListParam,resultListParam,dictList)
+
+                if(originID == ""):
+                    ruleID = rule.id
+                else:
+                    ruleID = originID + "," + ruleID
+                    #resultListParam.append(ResultWord(wordParam,rule.posNew,placeholderWord,"morphology",rule.id))
+                
+                resultListParam.append(ResultWord(wordParam,rule.posNew,placeholderWord,"morphology",ruleID))
+
+                morphologicalAnalyzer(placeholderWord,rulesListParam,resultListParam,dictList,ruleID)
                 resultFound = True
         elif(wordParam.lower().startswith(rule.chars)):
               #print("LOOKING FOR PREFIX: " + rule.chars)
@@ -134,9 +148,18 @@ def morphologicalAnalyzer(wordParam, rulesListParam, resultListParam, dictList):
             if(rule.replacementChars != "-"):
                 placeholderWord = rule.replacementChars + placeholderWord
             #print(placeholderWord)
-            resultListParam.append(ResultWord(wordParam,rule.posNew,placeholderWord,"morphology",rule.id))
+
+            if(originID == ""):
+                ruleID = rule.id
+            else:
+                ruleID = originID + "," + rule.id
+
+            resultListParam.append(ResultWord(wordParam,rule.posNew,placeholderWord,"morphology",ruleID))
             resultFound = True
-            #morphologicalAnalyzer(placeholderWord,rulesListParam,resultListParam,dictList)
+            morphologicalAnalyzer(placeholderWord,rulesListParam,resultListParam,dictList,ruleID)
+        else:
+            resultFound = False
+        
     return resultFound
 
         

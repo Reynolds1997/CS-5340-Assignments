@@ -95,9 +95,14 @@ def main():
                 else:
                     resultWords.append(ResultWord(word,dictWord.pos,dictWord.word,"dictionary","-"))
 
+
+        resultList = []
         #Perform morphological analysis if the word isn't in the dictionary
         if not foundInDictionary:
-            resultWords.extend(morphologicalAnalyzer(word, rulesList, resultWords, dictList,""))
+            stripper(word,"",rulesList,dictList,word,resultList)
+            resultWords.extend(resultList)
+            #morphologicalAnalyzer(word, rulesList, resultWords, dictList,"", resultList)
+
 
         #If it's not in the dictionary and no morphological analysis result was found, output the default.
         #if not foundInDictionary and not morphResultFound:
@@ -116,9 +121,92 @@ def main():
         prevWord = currentWord
 
 
-def morphologicalAnalyzer(wordParam, rulesListParam, resultListParam, dictList,originID):
+
+
+
+
+
+def stripper(word,path,rulesListParam,dictList,originalWord,resultsList):
+    #For every rule...
+    for rule in rulesListParam:
+        placeholderWord = word
+        placeholderPOS = ""
+        ruleID = ""
+
+        #Strip off the affix
+        affixFound = False
+        #print(type(word))
+        #print(word)
+        if(rule.keyword == "SUFFIX" and word.lower().endswith(rule.chars.lower())):
+            print(word)
+            placeholderWord = word.removesuffix(rule.chars)
+            if(rule.replacementChars != "-"):
+                placeholderWord = placeholderWord + rule.replacementChars 
+            placeholderPOS = rule.posOld
+            affixFound = True
+        elif(rule.keyword == "PREFIX" and word.lower().startswith(rule.chars.lower())):
+            placeholderWord = word.removeprefix(rule.chars)
+            if(rule.replacementChars != "-"):
+                placeholderWord = rule.replacementChars + placeholderWord
+            placeholderPOS = rule.posOld
+            affixFound = True
+
+        #print(type(placeholderWord))
+        #add to path
+        
+        #If an affix was found, we can still go deeper. 
+        if(affixFound):
+            path = path + "," + rule.id
+            print(path)
+            return stripper(placeholderWord,path,rulesListParam,dictList,originalWord,resultsList)
+        #Otherwise, 
+        else:
+            #If word is in dictionary, we append a new result to the 
+            wordMatchFound = False
+            for dictWord in dictList:
+                if(dictWord.word.lower() == placeholderWord.lower() and dictWord.pos.lower() == placeholderPOS.lower()):
+                    wordMatchFound = True
+                    #print("MATCH FOUND!")
+                    break
+            if (wordMatchFound == True):
+                resultsList.append(ResultWord(originalWord,placeholderPOS,word,"morphology",path))
+            else:
+                resultsList.append(ResultWord(originalWord,"noun",originalWord,"default","-"))
+            
+
+
+def morphAnalyzer(word):
     
-    morphResults = []
+    
+    #For every rule...
+    for rule in rulesListParam:
+        placeholderWord = word
+        placeholderPOS = ""
+        ruleID = ""
+
+        #Strip off the affix
+        affixFound = False
+        if(rule.keyword == "SUFFIX" and word.lower().endswith(rule.chars.lower())):
+            placeholderWord = word.removesuffix(rule.chars)
+            if(rule.replacementChars != "-"):
+                placeholderWord = placeholderWord + rule.replacementChars 
+            placeholderPOS = rule.posOld
+            affixFound = True
+        elif(rule.keyword == "PREFIX" and word.lower().startswith(rule.chars.lower())):
+            placeholderWord = word.removeprefix(rule.chars)
+            if(rule.replacementChars != "-"):
+                placeholderWord = rule.replacementChars + placeholderWord
+            placeholderPOS = rule.posOld
+            affixFound = True
+
+
+    else:
+        return morphAnalyzer()
+
+
+def morphologicalAnalyzer(wordParam, rulesListParam, resultListParam, dictList,originID,wordsSoFar):
+    
+    
     universalTracker = False
 
     #We can assume that the word is not in the dictionary if this method is being called on it. 
@@ -150,7 +238,7 @@ def morphologicalAnalyzer(wordParam, rulesListParam, resultListParam, dictList,o
             for word in dictList:
                 #print("Original word: " + wordParam)
                 #print(placeholderWord + " vs " + word.word)
-                #print(placeholderPOS + " vs " + word.pos)
+                    #print(placeholderPOS + " vs " + word.pos)
                 #If a word is in the dictionary with the listed POS
                 if(word.word.lower() == placeholderWord.lower() and word.pos.lower() == placeholderPOS.lower()):
                     resultFound = True
@@ -171,22 +259,17 @@ def morphologicalAnalyzer(wordParam, rulesListParam, resultListParam, dictList,o
                 #print(wordParam + " becomes " + placeholderWord)
                 #print(placeholderWord + " vs " + word.word)
                 #print(placeholderPOS + " vs " + word.pos)
-                results = morphologicalAnalyzer(placeholderWord,rulesListParam,resultListParam,dictList,rule.id)
+                return morphologicalAnalyzer(placeholderWord,rulesListParam,resultListParam,dictList,rule.id,wordsSoFar)
                 
 
             else:
                 universalTracker = True
-                morphResults.append(ResultWord(wordParam,rule.posNew,placeholderWord,"morphology",ruleID))
+                wordsSoFar.append(ResultWord(wordParam,rule.posNew,placeholderWord,"morphology",ruleID))
 
 
     if(not universalTracker):
-        morphResults.clear()
-        morphResults.append(ResultWord(wordParam,"noun",wordParam,"default","-"))
-
-
-
-    
-    return morphResults
+        wordsSoFar.append(ResultWord(wordParam,"noun",wordParam,"default","-"))
+        return wordsSoFar
 
    
 

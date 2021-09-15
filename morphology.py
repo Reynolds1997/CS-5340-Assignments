@@ -117,7 +117,9 @@ def main():
 
 
 def morphologicalAnalyzer(wordParam, rulesListParam, resultListParam, dictList,originID):
-    resultFound = False
+    
+    morphResults = []
+    universalTracker = False
 
     #We can assume that the word is not in the dictionary if this method is being called on it. 
 
@@ -149,7 +151,6 @@ def morphologicalAnalyzer(wordParam, rulesListParam, resultListParam, dictList,o
                 #print("Original word: " + wordParam)
                 #print(placeholderWord + " vs " + word.word)
                 #print(placeholderPOS + " vs " + word.pos)
-                
                 #If a word is in the dictionary with the listed POS
                 if(word.word.lower() == placeholderWord.lower() and word.pos.lower() == placeholderPOS.lower()):
                     resultFound = True
@@ -167,22 +168,27 @@ def morphologicalAnalyzer(wordParam, rulesListParam, resultListParam, dictList,o
 
             #If no word match was found, recursively call the rule set on the candidate root. 
             if (wordMatchFound == False):
-                print(wordParam + " becomes " + placeholderWord)
+                #print(wordParam + " becomes " + placeholderWord)
                 #print(placeholderWord + " vs " + word.word)
                 #print(placeholderPOS + " vs " + word.pos)
-                resultFound = morphologicalAnalyzer(placeholderWord,rulesListParam,resultListParam,dictList,rule.id)
+                results = morphologicalAnalyzer(placeholderWord,rulesListParam,resultListParam,dictList,rule.id)
+                
+
             else:
-                resultListParam.append(ResultWord(wordParam,rule.posNew,placeholderWord,"morphology",ruleID))
+                universalTracker = True
+                morphResults.append(ResultWord(wordParam,rule.posNew,placeholderWord,"morphology",ruleID))
 
 
+    if(not universalTracker):
+        morphResults.clear()
+        morphResults.append(ResultWord(wordParam,"noun",wordParam,"default","-"))
 
 
 
     
-    return resultFound
+    return morphResults
 
    
-
 
 
 

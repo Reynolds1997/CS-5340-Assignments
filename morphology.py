@@ -141,9 +141,9 @@ def morphologicalAnalyzer(wordParam, rulesListParam, resultListParam, dictList,o
         if(wordCapFound):
             wordMatchFound = False
             for word in dictList:
-                print("Original word: " + wordParam)
-                print(placeholderWord + " vs " + word.word)
-                print(placeholderPOS + " vs " + word.pos)
+                #print("Original word: " + wordParam)
+                #print(placeholderWord + " vs " + word.word)
+                #print(placeholderPOS + " vs " + word.pos)
                 if(word.word.lower() == placeholderWord.lower() and word.pos == placeholderPOS):
                     resultFound = True
                     if(originID != ""):
@@ -152,12 +152,18 @@ def morphologicalAnalyzer(wordParam, rulesListParam, resultListParam, dictList,o
                         ruleID = rule.id
                     resultListParam.append(ResultWord(wordParam,rule.posNew,placeholderWord,"morphology",ruleID))
                     wordMatchFound = True
+                    print("MATCH FOUND!")
                     break
+                else:
+                    print("Placeholder word: " + placeholderWord+ " Actual word: " + word.word)
+                    print("Placeholder POS " + placeholderPOS + "Actual pos: " + word.pos)
+
+            #If no word match was found, call the morphological analyzer on the 
             if (wordMatchFound == False):
-                #print(wordParam + " becomes " + placeholderWord)
+                print(wordParam + " becomes " + placeholderWord)
                 #print(placeholderWord + " vs " + word.word)
                 #print(placeholderPOS + " vs " + word.pos)
-                resultFound = morphologicalAnalyzer(placeholderWord.lower(),rulesListParam,resultListParam,dictList,rule.id)    
+                resultFound = morphologicalAnalyzer(placeholderWord,rulesListParam,resultListParam,dictList,rule.id)    
 
     return resultFound
 

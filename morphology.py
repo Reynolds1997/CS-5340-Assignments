@@ -117,20 +117,14 @@ def main():
         #print("PREV WORD: " + prevWord)
         if currentWord != prevWord and prevWord != "": 
             print("")
-        print("WORD=" +word.word + " " + "POS=" + word.pos + " " + "ROOT=" + word.root + " " + "SOURCE=" + word.source + " " + "PATH=" + word.path)
+        print("WORD=" +word.word + "\t" + "POS=" + word.pos + "\t" + "ROOT=" + word.root + "\t" + "SOURCE=" + word.source + "\t" + "PATH=" + word.path)
         prevWord = currentWord
-
-
-
-
-
-
 
 def stripper(word,path,rulesListParam,dictList,originalWord,resultsList,pos):
     #For every rule...
     for rule in rulesListParam:
         placeholderWord = word
-        placeholderPOS = ""
+        placeholderPOS = pos
         ruleID = ""
 
         #Strip off the affix
@@ -138,48 +132,59 @@ def stripper(word,path,rulesListParam,dictList,originalWord,resultsList,pos):
         #print(type(word))
         #print(word)
         if(rule.keyword == "SUFFIX" and word.lower().endswith(rule.chars.lower())):
-            print(word)
+            #print(word)
             placeholderWord = word.removesuffix(rule.chars)
             if(rule.replacementChars != "-"):
                 placeholderWord = placeholderWord + rule.replacementChars 
-            placeholderPOS = rule.posOld
+            placeholderPOS = rule.posNew
             affixFound = True
         elif(rule.keyword == "PREFIX" and word.lower().startswith(rule.chars.lower())):
             placeholderWord = word.removeprefix(rule.chars)
             if(rule.replacementChars != "-"):
                 placeholderWord = rule.replacementChars + placeholderWord
-            placeholderPOS = rule.posOld
+            placeholderPOS = rule.posNew
             affixFound = True
 
-        #print(type(placeholderWord))
-        #add to path
-        
         #If an affix was found, we can still go deeper. 
         if(affixFound):
-            path = path + "," + rule.id
-            print(path)
-            return stripper(placeholderWord,path,rulesListParam,dictList,originalWord,resultsList,placeholderPOS)
+            if(path == ""):
+                path = rule.id
+            else:
+                path = rule.id + "," + path
+            #print(path)
+            return stripper(placeholderWord,path,rulesListParam,dictList,originalWord,resultsList,placeholderPOS) #Check if the word's in the dictionary first
         #Otherwise, 
         else:
             #If word is in dictionary, we append a new result to the 
             wordMatchFound = False
             for dictWord in dictList:
-                print(dictWord.word + " VS " + placeholderWord)
-                print(dictWord.pos + " VS " + pos)
-                if(dictWord.word.lower() == placeholderWord.lower() and dictWord.pos.lower() == pos.lower()): #
-                    wordMatchFound = True
-                    #print("MATCH FOUND!")
+             #   print(originalWord)
+              #  print(dictWord.word + " VS " + placeholderWord)
+               # print(dictWord.pos + " VS " + pos)
+                if(dictWord.word.lower() == placeholderWord.lower()): #and dictWord.pos.lower() == pos.lower()): #
+                    
+                    addWord = True
+                    for result in resultsList:
+                        if(result.path == path):
+                            addWord = False
+                            #At this point, we need to try a different rule?
+                            #Check if there are multiple rules that can be applied after a rule
+                            #Maybe a list of rule paths that you can get, then apply this logic based on the rule
+                    if(addWord):
+                        resultsList.append(ResultWord(originalWord,placeholderPOS,placeholderWord,"morphology",path))
+                    #Use the path to go backwards to find the new POS
+              
                     break
-            if (wordMatchFound == True):
-                addWord = True
-                for result in resultsList:
-                    if(result.path == path):
-                        addWord = False
-                if(addWord):
-                    resultsList.append(ResultWord(originalWord,placeholderPOS,word,"morphology",path))
-            else:
-                if(resultsList.__len__() ==0):
-                    resultsList.append(ResultWord(originalWord,"noun",originalWord,"default","-"))
+                    #In some manner, start the process over again and tell it if it's headed down the original path, don't go down it.
+                    #Check for multiple paths.
+            #
+            # if (wordMatchFound == True):
+                
+
+                #Problem though: somehow this is only doing one path. 
+
+    if(resultsList.__len__() ==0):
+        resultsList.append(ResultWord(originalWord,"noun",originalWord,"default","-"))
             
 
 
@@ -253,13 +258,5 @@ def morphologicalAnalyzer(wordParam, rulesListParam, resultListParam, dictList,o
 
    
 
-
-
-
-
-
-    
-
-        
 
 main()
